@@ -2,9 +2,6 @@ name: Build gnulinux blossom kernel
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
 
 permissions:
   contents: write
@@ -14,6 +11,7 @@ env:
   KERNEL_DIR: kernel_src
   DEFCONFIG: blossom_gnulinux_defconfig
   CROSS_COMPILE: aarch64-linux-gnu-
+  CLANG_TRIPLE: aarch64-linux-gnu-
 
 jobs:
   build:
@@ -36,6 +34,9 @@ jobs:
             zip \
             unzip \
             python3 \
+            clang \
+            lld \
+            llvm \
             gcc-aarch64-linux-gnu \
             g++-aarch64-linux-gnu
 
@@ -52,7 +53,11 @@ jobs:
         working-directory: ${{ env.KERNEL_DIR }}
         run: |
           JOBS=$(( $(nproc) + 1 ))
-          make O=out ARCH=arm64 CROSS_COMPILE=${{ env.CROSS_COMPILE }} -j"${JOBS}"
+          make O=out ARCH=arm64 \
+            CC=clang \
+            CLANG_TRIPLE=${{ env.CLANG_TRIPLE }} \
+            CROSS_COMPILE=${{ env.CROSS_COMPILE }} \
+            -j"${JOBS}"
 
       - name: Check build output
         working-directory: ${{ env.KERNEL_DIR }}
